@@ -1,8 +1,8 @@
 {
   "name": "sqlconds",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "前后台约定通用sql查询条件",
-  "main": "index.js",
+  "main": "./dist/index.js",
   "scripts": {
     "build": "tsc",
     "test": "mocha --reporter spec"
