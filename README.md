@@ -5,6 +5,8 @@ sql 通用查询条件组织
 npm install sqlconds
 # Usage 使用
 ```javascript
+ const Sqlconds = require('sqlconds');
+
  const sqlconds =new Sqlconds("postgres"); // postgres/mysql/oracle ...
  const sqlres= sqlconds.condPackage( [{"operator":"EQ","field":"bm","value":"zrzhczt_ggfwss_xx"},{"operator":"OBD","field":"px"}] );
 
