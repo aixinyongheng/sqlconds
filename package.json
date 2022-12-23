@@ -1,6 +1,6 @@
 {
   "name": "sqlconds",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "前后台约定通用sql查询条件",
   "main": "index.js",
   "scripts": {
