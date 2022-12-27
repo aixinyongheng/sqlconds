@@ -2,6 +2,9 @@
 sql 通用查询条件组织  
 sql 通用统计条件组织  
 前后台约定通用查询条件
+ 
+github仓库地址: [ https://github.com/aixinyongheng/sqlconds]( https://github.com/aixinyongheng/sqlconds)
+
 # Install 安装
 npm install sqlconds
 # Usage 使用
