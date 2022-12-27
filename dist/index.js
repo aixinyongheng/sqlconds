@@ -1,8 +1,23 @@
 "use strict";
+/**
+ * todo 1.防止sql注入
+ *      2.eslint配置
+ *      3.通用统计sql组织
+ */
 var Sqlconds = /** @class */ (function () {
+    /**
+     * 构造函数
+     * @param flag 数据库类型  [postgres/mysql/oracle/...]
+     */
     function Sqlconds(flag) {
         this.flag = flag;
     }
+    /**
+     *
+     * @param conds 查询条件
+     * @param rntable 表名
+     * @returns
+     */
     Sqlconds.prototype.condPackage = function (conds, rntable) {
         if (!conds || conds === '') {
             return { cond: '', order: '' };
@@ -26,7 +41,6 @@ var Sqlconds = /** @class */ (function () {
         else {
             result.order = '';
         }
-        console.log(result);
         return result;
     };
     Sqlconds.prototype._condstostr = function (_a) {
@@ -123,6 +137,118 @@ var Sqlconds = /** @class */ (function () {
             condstr += " ".concat(conditemFieldReset, " ").concat(RelationSign[conditem.operator], "  ").concat(itemvalue, " ");
         }
         return condstr;
+    };
+    /**
+     * 通用统计-通用分组条件组织
+     * @param condObj 分组字段条件 1.支持字段名,分隔 2.支持[{ "type":"CG", "field":"field1", "rename":"newfield1" }]
+     * @returns
+     */
+    Sqlconds.prototype.groupCondPackage = function (condObj) {
+        var groupObj = {
+            groupbyconds: '',
+            fields: '1',
+        };
+        if (!condObj || condObj === '') {
+            return groupObj;
+        }
+        var groupConds = function (_a) {
+            var type = _a.type, field = _a.field, rename = _a.rename;
+            field = field && field.replace(/\\/g, '\\').replace(/'/g, '\'\'').replace(/-/g, '');
+            rename = rename && rename.replace(/\\/g, '\\').replace(/'/g, '\'\'').replace(/-/g, '');
+            var types = {
+                CG: "\"".concat(field, "\""), SUB: "substring(".concat(field, ")"),
+            };
+            return {
+                cond: types[type],
+                field: "".concat(types[type], " ").concat(rename ? "AS \"".concat(rename, "\"") : ''),
+            };
+        };
+        if ((typeof condObj == 'string' && condObj.trim().indexOf("[") == 0) || typeof condObj == 'object') { // 传参为array或者array的字符串格式
+            var condArr = typeof condObj === 'string' ? JSON.parse(condObj) : condObj;
+            var conds_1 = [], fields_1 = [];
+            console.log(condArr);
+            condArr.forEach(function (_cond) {
+                var _a = groupConds(_cond), cond = _a.cond, field = _a.field;
+                conds_1.push(cond);
+                fields_1.push(field);
+            });
+            groupObj = {
+                groupbyconds: ' group by ' + conds_1.join(',') + ' ',
+                fields: " " + fields_1.join(',') + " ",
+            };
+        }
+        else { // 传参为,分隔的字段
+            var condstr = condObj;
+            groupObj.groupbyconds = " group by \"".concat(condstr.split(',').join('","'), "\" ");
+            groupObj.fields = " \"".concat(condstr.split(',').join('","'), "\" ");
+        }
+        return groupObj;
+    };
+    /**
+     * 通用统计-统计条件聚合函数组织
+     * @param conds 通用统计-统计条件聚合函数组织
+     * @returns
+     */
+    Sqlconds.prototype.statisCondPackage = function (conds) {
+        // 过滤 '[]'空数组
+        if (!conds || conds === '' || conds === '[]') {
+            return { statiscond: '' };
+        }
+        conds = typeof conds === 'string' ? JSON.parse(conds) : conds;
+        var result = { statiscond: '' };
+        var sqlconds = [[], []];
+        this._statisCondPackage(conds, sqlconds);
+        result.statiscond = " ".concat(sqlconds[0].join(','), " ");
+        return result;
+    };
+    Sqlconds.prototype._statisCondPackage = function (conds, sqlconds) {
+        var RelationSign = function (key, field, typecast) {
+            var _ = {
+                // 1.type 当type = 'ZDY' 自定义，可以将aggSign传以下可以进行optSign操作的聚合函数，可实现【sum(zd1) + sum(zd2)... || max(zd1) * max(zd2)... || avg(zd1) + avg(zd2)... ...】,即实现多个字段的统计基础上的加减乘除操作
+                ZDZ: "max(\"".concat(field, "\"").concat(typecast, ")"), ZXZ: "min(\"".concat(field, "\"").concat(typecast, ")"), PJZ: "avg(\"".concat(field, "\"").concat(typecast, ")"), BZC: "stddev_pop(\"".concat(field, "\"").concat(typecast, ")"), FC: "var_pop(\"".concat(field, "\"").concat(typecast, ")"),
+                QH: "sum(\"".concat(field, "\"").concat(typecast, ")"), STR: "string_agg(\"".concat(field, "\"::varchar, ',')"), ARR: "array_agg(\"".concat(field, "\"").concat(typecast, ")"),
+                // optSign 运算操作符
+                JIA: '+', JIAN: '-', CHENG: '*', CHU: '/',
+            };
+            return _[key];
+        };
+        var index = 0;
+        var _loop_1 = function (item) {
+            index++;
+            var aggObj = '';
+            // 支持多个字段sum(zd1) + sum(zd2)... || max(zd1) * max(zd2)... || avg(zd1) + avg(zd2)... ...
+            if (item.type === 'ZDY' && item.aggSign && item.optSign) {
+                var fieldArr = item.field && item.field.split(',') || [];
+                var fieldList_1 = [];
+                fieldArr.forEach(function (field) {
+                    if (item.typecast) {
+                        fieldList_1.push("".concat(RelationSign(item.aggSign, field, '::' + item.typecast)));
+                    }
+                    else {
+                        fieldList_1.push("".concat(RelationSign(item.aggSign, field, '')));
+                    }
+                });
+                aggObj = fieldList_1.join(RelationSign(item.optSign));
+            }
+            else {
+                if (item.typecast) {
+                    aggObj = "".concat(RelationSign(item.type, item.field, '::' + item.typecast));
+                }
+                else {
+                    aggObj = "".concat(RelationSign(item.type, item.field, ''));
+                }
+            }
+            if (item.dpoint) {
+                sqlconds[0].push("round(".concat(aggObj, ",").concat(item.dpoint, ") AS \"").concat(item.rename, "\" "));
+            }
+            else {
+                sqlconds[0].push("".concat(aggObj, " AS \"").concat(item.rename, "\""));
+            }
+        };
+        for (var _i = 0, conds_2 = conds; _i < conds_2.length; _i++) {
+            var item = conds_2[_i];
+            _loop_1(item);
+        }
     };
     return Sqlconds;
 }());

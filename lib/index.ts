@@ -1,5 +1,14 @@
+/**
+ * todo 1.防止sql注入
+ *      2.eslint配置
+ *      3.通用统计sql组织
+ */
 class  Sqlconds {
   private flag;
+  /**
+   * 构造函数
+   * @param flag 数据库类型  [postgres/mysql/oracle/...]
+   */
   constructor(flag:Text){
     this.flag=flag;
   }
@@ -9,7 +18,7 @@ class  Sqlconds {
    * @param rntable 表名
    * @returns 
    */
-  condPackage(conds:any, rntable:any) {
+  public condPackage(conds:any, rntable:any) {
     if (!conds || conds === '') {
       return { cond: '', order: '' };
     }
@@ -30,11 +39,10 @@ class  Sqlconds {
     } else {
       result.order = '';
     }
-    console.log(result);
     return result;
   }
 
-  _condstostr({ conds, rntable }:any) {
+  private _condstostr({ conds, rntable }:any) {
     const result:any = {};
     let condsstr = '';
     let orderstr = '';
@@ -81,7 +89,7 @@ class  Sqlconds {
   }
 
   // 条件转换
-  _formatCondsql({ conditem, rntable }:any) {
+  private  _formatCondsql({ conditem, rntable }:any) {
     const RelationSign:any = {
       EQ: ' = ', EQN: ' != ', EQ_D: ' = ', GT: ' > ', LT: ' < ', GTE: ' >= ', LTE: ' <= ', FQ: ' like ', NFQ: ' not like ', FQL: ' like ', FQR: ' like ', INULL: ' is null ', INNULL: ' is not null ', IN: ' in ', INN: ' not in ', BTN: ' between ', OBA: ' order by ', OBD: ' order by  ', OB: ' order by  ', JSONIN: ' ? ', GEOMINTER: '=', GEOMNOTINTER: '=',
     };
@@ -120,5 +128,114 @@ class  Sqlconds {
     }
     return condstr;
   }
+
+
+  /**
+   * 通用统计-通用分组条件组织
+   * @param condObj 分组字段条件 1.支持字段名,分隔 2.支持[{ "type":"CG", "field":"field1", "rename":"newfield1" }]
+   * @returns 
+   */
+  public groupCondPackage(condObj:String|Array<Object>) {
+    let groupObj = {
+      groupbyconds: '',
+      fields: '1',
+    };
+    if (!condObj || condObj === '') {
+      return groupObj;
+    }
+    const groupConds = ({ type, field, rename, }:any) => {
+      field = field && field.replace(/\\/g, '\\').replace(/'/g, '\'\'').replace(/-/g, '');
+      rename = rename && rename.replace(/\\/g, '\\').replace(/'/g, '\'\'').replace(/-/g, '');
+      const types:any = {
+        CG: `"${field}"`, SUB: `substring(${field})`,
+      };
+      return {
+        cond: types[type],
+        field: `${types[type]} ${rename ? `AS "${rename}"` : ''}`,
+      };
+    };
+    if((typeof condObj=='string'&&condObj.trim().indexOf("[")==0)||typeof condObj=='object'){ // 传参为array或者array的字符串格式
+        let condArr:Array<any> = typeof condObj === 'string' ? JSON.parse(condObj) : condObj;
+        const conds:Array<any> = [],
+        fields:Array<Object> = [];
+        console.log(condArr);
+        condArr.forEach((_cond) => {
+          const { cond, field } = groupConds(_cond);
+          conds.push(cond);
+          fields.push(field);
+        });
+        groupObj = {
+          groupbyconds: ' group by ' + conds.join(',')+' ',
+          fields: " "+fields.join(',')+" ",
+        };
+    } else { // 传参为,分隔的字段
+      let condstr:String =condObj;
+      groupObj.groupbyconds = ` group by "${condstr.split(',').join('","')}" `;
+      groupObj.fields = ` "${condstr.split(',').join('","')}" `;
+    }
+    return groupObj;
+  }
+
+  /**
+   * 通用统计-统计条件聚合函数组织
+   * @param conds 通用统计-统计条件聚合函数组织
+   * @returns 
+   */
+  public statisCondPackage(conds:String|Array<Object>) {
+    // 过滤 '[]'空数组
+    if (!conds || conds === ''|| conds === '[]') {
+      return { statiscond: '' };
+    }
+    conds = typeof conds === 'string' ? JSON.parse(conds) : conds;
+    
+    const result = { statiscond: '' };
+    const sqlconds = [[], []];
+    this._statisCondPackage(conds, sqlconds);
+    result.statiscond = ` ${sqlconds[0].join(',')} `;
+    return result;
+  }
+
+  private _statisCondPackage(conds:any, sqlconds:any) {
+    const RelationSign:any = (key: string , field: string, typecast: string ) => {
+      const _:any = {
+        // 1.type 当type = 'ZDY' 自定义，可以将aggSign传以下可以进行optSign操作的聚合函数，可实现【sum(zd1) + sum(zd2)... || max(zd1) * max(zd2)... || avg(zd1) + avg(zd2)... ...】,即实现多个字段的统计基础上的加减乘除操作
+        ZDZ: `max("${field}"${typecast})`, ZXZ: `min("${field}"${typecast})`, PJZ: `avg("${field}"${typecast})`, BZC: `stddev_pop("${field}"${typecast})`, FC: `var_pop("${field}"${typecast})`,
+        QH: `sum("${field}"${typecast})`, STR: `string_agg("${field}"::varchar, ',')`, ARR: `array_agg("${field}"${typecast})`,
+        // optSign 运算操作符
+        JIA: '+', JIAN: '-', CHENG: '*', CHU: '/',
+      };
+      return _[key];
+    };
+    let index = 0;
+    for (const item of conds) {
+      index++;
+        let aggObj = '';
+        // 支持多个字段sum(zd1) + sum(zd2)... || max(zd1) * max(zd2)... || avg(zd1) + avg(zd2)... ...
+        if (item.type === 'ZDY' && item.aggSign && item.optSign) {
+          const fieldArr = item.field && item.field.split(',') || [];
+          const fieldList: string[] = [];
+          fieldArr.forEach((field: any) => {
+            if (item.typecast) {
+              fieldList.push(`${RelationSign(item.aggSign, field, '::' + item.typecast)}`);
+            } else {
+              fieldList.push(`${RelationSign(item.aggSign, field, '')}`);
+            }
+          });
+          aggObj = fieldList.join(RelationSign(item.optSign));
+        } else {
+          if (item.typecast) {
+            aggObj = `${RelationSign(item.type, item.field, '::' + item.typecast)}`;
+          } else {
+            aggObj = `${RelationSign(item.type, item.field, '')}`;
+          }
+        }
+        if (item.dpoint) {
+          sqlconds[0].push(`round(${aggObj},${item.dpoint}) AS "${item.rename}" `);
+        } else {
+          sqlconds[0].push(`${aggObj} AS "${item.rename}"`);
+        }
+    }
+  }
+  
 }
 module.exports=Sqlconds;

@@ -11,4 +11,22 @@ describe('class Sqlconds:', () => {
     expect(res.cond).to.equal(`and   (  "bm"   =   'zrzhczt_ggfwss_xx'  and  1 = 1 )`);
     expect(res.order).to.equal(`order by   "px" desc  `);
   });
+
+  it('groupCondPackage:', () => {
+    const sqlconds =new Sqlconds("postgres");
+    const res= sqlconds.groupCondPackage( 'field1,field2' );
+    expect(res.groupbyconds).to.equal(` group by "field1","field2" `);
+    expect(res.fields).to.equal(` "field1","field2" `);
+    const res2= sqlconds.groupCondPackage('[{ "type":"CG", "field":"field1", "rename":"newfield1" },{ "type":"SUB", "field":"field2,1,4", "rename":"newfield2" }]');
+    expect(res2.groupbyconds).to.equal(` group by "field1",substring(field2,1,4) `);
+    expect(res2.fields).to.equal(` "field1" AS "newfield1",substring(field2,1,4) AS "newfield2" `);
+  });
+
+  it('statisCondPackage:', () => {
+    const sqlconds =new Sqlconds("postgres");
+    const res= sqlconds.statisCondPackage([{"field":"field1","type":"ZDZ","rename":"最大值","dpoint":0}]);
+    expect(res.statiscond).to.equal(` max("field1") AS "最大值" `);
+    
+  });
+
 });
