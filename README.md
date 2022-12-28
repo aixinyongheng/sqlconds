@@ -18,7 +18,7 @@ npm install sqlconds
  console.log(sqlres.cond); // and   (  "bm"   =   'zrzhczt_ggfwss_xx' )
  console.log(sqlres.order); // order by   "px" desc
 
- console.log(`select * from tableA where 1=1 ${sqlres.conds} ${sqlres.order}`);
+ console.log(`select * from tableA where 1=1 ${sqlres.cond} ${sqlres.order}`);
 
  // 2. 分组条件组织
  // 2.1 分组group by 字段
