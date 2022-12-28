@@ -145,7 +145,7 @@ var Sqlconds = /** @class */ (function () {
      */
     Sqlconds.prototype.groupCondPackage = function (condObj) {
         var groupObj = {
-            groupbyconds: '',
+            groupbycond: '',
             fields: '1',
         };
         if (!condObj || condObj === '') {
@@ -173,13 +173,13 @@ var Sqlconds = /** @class */ (function () {
                 fields_1.push(field);
             });
             groupObj = {
-                groupbyconds: ' group by ' + conds_1.join(',') + ' ',
+                groupbycond: ' group by ' + conds_1.join(',') + ' ',
                 fields: " " + fields_1.join(',') + " ",
             };
         }
         else { // 传参为,分隔的字段
             var condstr = condObj;
-            groupObj.groupbyconds = " group by \"".concat(condstr.split(',').join('","'), "\" ");
+            groupObj.groupbycond = " group by \"".concat(condstr.split(',').join('","'), "\" ");
             groupObj.fields = " \"".concat(condstr.split(',').join('","'), "\" ");
         }
         return groupObj;

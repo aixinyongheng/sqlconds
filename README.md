@@ -15,27 +15,27 @@ npm install sqlconds
  // 1.筛选条件组织
  const sqlres= sqlconds.condPackage( [{"operator":"EQ","field":"bm","value":"zrzhczt_ggfwss_xx"},{"operator":"OBD","field":"px"}] );
 
- sqlres.conds; // and   (  "bm"   =   'zrzhczt_ggfwss_xx' )
- sqlres.order; // order by   "px" desc
+ console.log(sqlres.cond); // and   (  "bm"   =   'zrzhczt_ggfwss_xx' )
+ console.log(sqlres.order); // order by   "px" desc
 
- `select * from tableA where 1=1 ${sqlres.conds} ${sqlres.order}`
+ console.log(`select * from tableA where 1=1 ${sqlres.conds} ${sqlres.order}`);
 
  // 2. 分组条件组织
  // 2.1 分组group by 字段
  const groupbyRes=sqlconds.groupCondPackage('[{ "type":"CG", "field":"field1", "rename":"newfield1" },{ "type":"SUB", "field":"field2,1,4", "rename":"newfield2" }]');
 
- groupbyRes.groupbyconds; //  group by "field1",substring(field2,1,4) 
- groupbyRes.fields; //  "field1" AS "newfield1",substring(field2,1,4) AS "newfield2" 
+  console.log(groupbyRes.groupbycond); //  group by "field1",substring(field2,1,4) 
+  console.log(groupbyRes.fields); //  "field1" AS "newfield1",substring(field2,1,4) AS "newfield2" 
 
- `select count(*),${groupbyRes.fields} from tableA where 1=1 ${sqlres.conds} ${groupbyRes.groupbyconds}`
+  console.log(`select count(*),${groupbyRes.fields} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`)
 
 
  // 2.2 聚合统计函数组织
 const statiscondRes = sqlconds.statisCondPackage([{"field":"field1","type":"ZDZ","rename":"最大值","dpoint":0}]);
-statiscondRes.statiscond; //  max("field1") AS "最大值" 
+console.log(statiscondRes.statiscond); //  max("field1") AS "最大值" 
 
 
- `select count(*),${groupbyRes.fields},${statiscondRes.statiscond} from tableA where 1=1 ${sqlres.conds} ${groupbyRes.groupbyconds}`
+console.log(`select count(*),${groupbyRes.fields},${statiscondRes.statiscond} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`)
 
 ```
 # Grammer 参数语法

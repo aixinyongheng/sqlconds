@@ -137,7 +137,7 @@ class  Sqlconds {
    */
   public groupCondPackage(condObj:String|Array<Object>) {
     let groupObj = {
-      groupbyconds: '',
+      groupbycond: '',
       fields: '1',
     };
     if (!condObj || condObj === '') {
@@ -165,12 +165,12 @@ class  Sqlconds {
           fields.push(field);
         });
         groupObj = {
-          groupbyconds: ' group by ' + conds.join(',')+' ',
+          groupbycond: ' group by ' + conds.join(',')+' ',
           fields: " "+fields.join(',')+" ",
         };
     } else { // 传参为,分隔的字段
       let condstr:String =condObj;
-      groupObj.groupbyconds = ` group by "${condstr.split(',').join('","')}" `;
+      groupObj.groupbycond = ` group by "${condstr.split(',').join('","')}" `;
       groupObj.fields = ` "${condstr.split(',').join('","')}" `;
     }
     return groupObj;

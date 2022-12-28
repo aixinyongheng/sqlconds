@@ -15,10 +15,10 @@ describe('class Sqlconds:', () => {
   it('groupCondPackage:', () => {
     const sqlconds =new Sqlconds("postgres");
     const res= sqlconds.groupCondPackage( 'field1,field2' );
-    expect(res.groupbyconds).to.equal(` group by "field1","field2" `);
+    expect(res.groupbycond).to.equal(` group by "field1","field2" `);
     expect(res.fields).to.equal(` "field1","field2" `);
     const res2= sqlconds.groupCondPackage('[{ "type":"CG", "field":"field1", "rename":"newfield1" },{ "type":"SUB", "field":"field2,1,4", "rename":"newfield2" }]');
-    expect(res2.groupbyconds).to.equal(` group by "field1",substring(field2,1,4) `);
+    expect(res2.groupbycond).to.equal(` group by "field1",substring(field2,1,4) `);
     expect(res2.fields).to.equal(` "field1" AS "newfield1",substring(field2,1,4) AS "newfield2" `);
   });
 
