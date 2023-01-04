@@ -10,7 +10,7 @@ var Sqlconds = /** @class */ (function () {
      * @param flag 数据库类型  [postgres/mysql/oracle/...]
      */
     function Sqlconds(flag) {
-        this.flag = flag;
+        this._flag = flag;
     }
     /**
      *
@@ -166,7 +166,6 @@ var Sqlconds = /** @class */ (function () {
         if ((typeof condObj == 'string' && condObj.trim().indexOf("[") == 0) || typeof condObj == 'object') { // 传参为array或者array的字符串格式
             var condArr = typeof condObj === 'string' ? JSON.parse(condObj) : condObj;
             var conds_1 = [], fields_1 = [];
-            console.log(condArr);
             condArr.forEach(function (_cond) {
                 var _a = groupConds(_cond), cond = _a.cond, field = _a.field;
                 conds_1.push(cond);
@@ -212,9 +211,7 @@ var Sqlconds = /** @class */ (function () {
             };
             return _[key];
         };
-        var index = 0;
         var _loop_1 = function (item) {
-            index++;
             var aggObj = '';
             // 支持多个字段sum(zd1) + sum(zd2)... || max(zd1) * max(zd2)... || avg(zd1) + avg(zd2)... ...
             if (item.type === 'ZDY' && item.aggSign && item.optSign) {
@@ -249,6 +246,89 @@ var Sqlconds = /** @class */ (function () {
             var item = conds_2[_i];
             _loop_1(item);
         }
+    };
+    /**
+     * 将数组对象转换为sql     测试一段时间在发布版本
+     * @param tablename {*} 表名
+     * @param DataList {*} 数据数组 []
+     * @param param2 {*} config 转换配置
+     * @param param2.idfield {*} 主键字段(暂不支持联合主键)
+     * @param param2.pattern {*} 模式 insert/auto   insert 时，只生成insert语句，  auto时，会根据数据对象中是否存在idfield去生成 insert/update 语句
+     * @param param2.timefields {*} 时间类型字段设置 将时间类型的字段用,分隔
+     * @param param2.geomfields {*} 空间类型字段设置（postgres时支持）
+     * @param param2.geomsrid   {*} 空间字段坐标系类型 （postgres时支持） 默认4490
+     * @returns
+     */
+    Sqlconds.prototype.objtosql = function (tablename, DataList, _a) {
+        var _b = _a === void 0 ? {} : _a, _c = _b.idfield, idfield = _c === void 0 ? 'id' : _c, _d = _b.pattern, pattern = _d === void 0 ? 'insert' : _d, _e = _b.timefields, timefields = _e === void 0 ? '' : _e, _f = _b.geomfields, geomfields = _f === void 0 ? '' : _f, _g = _b.geomsrid, geomsrid = _g === void 0 ? '4490' : _g;
+        var result = { code: 1, sql: '' };
+        var dealSql = ' ';
+        // const uuid = require('uuid');
+        var timefieldsArr = timefields.split(',');
+        var geomfieldsArr = geomfields.split(',');
+        DataList = typeof DataList === 'string' ? JSON.parse(DataList) : DataList;
+        for (var _i = 0, DataList_1 = DataList; _i < DataList_1.length; _i++) {
+            var dataItem = DataList_1[_i];
+            if (pattern == 'auto' && Object.prototype.hasOwnProperty.call(dataItem, idfield) && dataItem[idfield] && dataItem[idfield] !== '') {
+                // 编辑
+                var setSqlArr = [];
+                for (var key in dataItem) {
+                    if (timefieldsArr.includes(key) && dataItem[key] === -1) {
+                        setSqlArr.push("".concat(key, " = now() "));
+                    }
+                    else if (this._flag === 'postgres' && key && geomfieldsArr.includes(key)) {
+                        var _data = JSON.stringify(dataItem[key]);
+                        setSqlArr.push("\"".concat(key, "\"=public.ST_SetSRID(public.st_geomfromgeojson('").concat(_data.replace(/\s+/g, ''), "'),").concat(geomsrid, ")"));
+                    }
+                    else if (dataItem[key] || dataItem[key] === '' || dataItem[key] === 0) {
+                        if (typeof dataItem[key] === 'object') {
+                            setSqlArr.push("\"".concat(key, "\"='").concat(JSON.stringify(dataItem[key]), "'"));
+                        }
+                        else {
+                            setSqlArr.push("\"".concat(key, "\"='").concat(dataItem[key], "'"));
+                        }
+                    }
+                    else {
+                        setSqlArr.push("\"".concat(key, "\"=null"));
+                    }
+                }
+                dealSql += " update  \"".concat(tablename, "\"  set  ").concat(setSqlArr.join(','), " where \"").concat(idfield, "\"='").concat(dataItem[idfield], "' RETURNING *; ");
+            }
+            else {
+                if (idfield) {
+                    // dataItem[idfield] =uuid.v4();
+                }
+                // 新增
+                var insertFieldArr = [];
+                var insertValueArr = [];
+                for (var key in dataItem) {
+                    insertFieldArr.push("\"".concat(key, "\""));
+                    if (timefieldsArr.includes(key)) {
+                        insertValueArr.push('now()');
+                    }
+                    else if (this._flag === 'postgres' && key && geomfieldsArr.includes(key)) {
+                        var _data = typeof dataItem[key] == "string" ? dataItem[key] : JSON.stringify(dataItem[key]);
+                        insertValueArr.push("public.ST_SetSRID(public.st_geomfromgeojson('".concat(_data.replace(/\s+/g, ''), "'),4490)"));
+                    }
+                    else {
+                        if (dataItem[key] || dataItem[key] === '' || dataItem[key] === 0) {
+                            if (typeof dataItem[key] === 'object') {
+                                insertValueArr.push("'".concat(JSON.stringify(dataItem[key]), "'"));
+                            }
+                            else {
+                                insertValueArr.push("'".concat(dataItem[key], "'"));
+                            }
+                        }
+                        else {
+                            insertValueArr.push('null');
+                        }
+                    }
+                }
+                dealSql += "insert into \"".concat(tablename, "\" (").concat(insertFieldArr.join(','), ") values (").concat(insertValueArr.join(','), ") RETURNING *;");
+            }
+        }
+        result.sql = dealSql;
+        return result;
     };
     return Sqlconds;
 }());

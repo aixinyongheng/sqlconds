@@ -1,14 +1,19 @@
 # Sqlconds
-sql 通用查询条件组织  
-sql 通用统计条件组织  
 前后台约定通用查询条件
- 
-github仓库地址: [ https://github.com/aixinyongheng/sqlconds]( https://github.com/aixinyongheng/sqlconds)
+
+功能点：  
+&nbsp; &nbsp; ◇sql 通用查询条件组织  
+&nbsp; &nbsp; ◇sql 通用统计条件组织  
+&nbsp; &nbsp; ◇将数组对象转换为insert/update语句。
 
 # Install 安装
 npm install sqlconds
 # Usage 使用
+
+### 通用查询条件组织示例：
+#### 通用查询条件组织：
 ```javascript
+ // github仓库地址: https://github.com/aixinyongheng/sqlconds
  const Sqlconds = require('sqlconds');
  
  const sqlconds =new Sqlconds("postgres"); // postgres/mysql/oracle ...
@@ -27,17 +32,32 @@ npm install sqlconds
   console.log(groupbyRes.groupbycond); //  group by "field1",substring(field2,1,4) 
   console.log(groupbyRes.fields); //  "field1" AS "newfield1",substring(field2,1,4) AS "newfield2" 
 
-  console.log(`select count(*),${groupbyRes.fields} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`)
+  console.log(`select count(*),${groupbyRes.fields} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`);
 
 
  // 2.2 聚合统计函数组织
-const statiscondRes = sqlconds.statisCondPackage([{"field":"field1","type":"ZDZ","rename":"最大值","dpoint":0}]);
-console.log(statiscondRes.statiscond); //  max("field1") AS "最大值" 
+  const statiscondRes = sqlconds.statisCondPackage([{"field":"field1","type":"ZDZ","rename":"最大值","dpoint":0}]);
+  console.log(statiscondRes.statiscond); //  max("field1") AS "最大值" 
 
 
-console.log(`select count(*),${groupbyRes.fields},${statiscondRes.statiscond} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`)
+  console.log(`select count(*),${groupbyRes.fields},${statiscondRes.statiscond} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`);
+```
+#### 数值对象转为insert/update语句
+```javascript
+ const Sqlconds = require('sqlconds');
+ const sqlconds = new Sqlconds("postgres");
+    const res = sqlconds.objtosql("tableA", [{
+      "id": "111", "name": "test", "geom": {
+        "coordinates": [112.3257164817677,
+          35.342031483036436
+        ],
+        "type": "Point"
+      }
+    }], { geomfields: 'geom' });
+    console.log(res.sql);// insert into "tableA" ("id","name","geom") values ('111','test',public.ST_SetSRID(public.st_geomfromgeojson('{"coordinates":[112.3257164817677,35.342031483036436],"type":"Point"}'),4490)) RETURNING *;
 
 ```
+
 # Grammer 参数语法
 ## condPackage 查询过滤条件组织/排序条件
 | params |require |paramname | description      |
@@ -69,15 +89,36 @@ console.log(`select count(*),${groupbyRes.fields},${statiscondRes.statiscond} fr
 |conds.rename|yes|重命名字段名|返回分组查询字段时重命名|
 |conds.dppoint|no|保留精度（小数点后几位）|返回统计字段时保留精度|
 
+## objtosql 数组对象转为insert/update语句
+|num| params |require |paramname | description |
+|--|:--------:|--|:--------: |-------------:|
+|1|tablename|yes|表名|插入/更新表名|
+|2|DataList|yes|数组对象|eg: [{"field1":"value1","field2":"value2"}]|
+|3|config|no|配置||
+|3|config.idfield|no|主键，更新时条件字段|
+|3|config.pattern|no|插入模式|模式 【insert/auto】   insert 时，只生成insert语句，  auto时，会根据数据对象中是否存在idfield去生成 insert/update 语句|
+|3|config.timefields|no|时间字段配置|,分隔字段名，配置为时间字段的数值为-1时，会使用数据库时间now()赋值|
+|3|config.geomfields|no|空间类型字段设置（postgres时支持）|,分隔字段名|
+|3|config.geomsrid|no|空间字段坐标系类型 （postgres时支持） 默认4490 ||
+
+
+
 # example 示例
 1.支持高级查询条件
 2.支持pg的空间相交函数
-3.支持拓展高级查询条件（todo）
 
 复杂查询示例：
 |require|conds|result|
 |---|:--------:|-------------:|
 |查询表中field1为11，并且field2同时为1和2的条件| [{"operator":"EQ","field":"field1","value":"11","condition":[{"operator":"EQ","field":"field2","value":"1"},{"whereLinker":"or","operator":"EQ","field":"field2","value":"2"}]}] |and "field1" ='11' and ( "field2"='1' or field2='2' )|
 |pg中查询与114,32点位相交的数据|[{"operator":"GEOMINTER","field":"geom","value":{"type":"Point","coordinates":[118.530982355499,28.6730332199371]}}]| and   ( st_intersects( "geom" , st_setsrid(st_geomfromgeojson('{"type":"Point","coordinates":[118.530982355499,28.6730332199371]}'),4490)) =  true )|
+
+
+待完善：
+sql拼接防止sql注入（todo）
+支持更多数据库类型（todo）
+支持拓展自定义查询插值条件（todo）
+
+
 
 
