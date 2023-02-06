@@ -1,4 +1,4 @@
-# Sqlconds
+# Sqlconds 简介
 前后台约定通用查询条件
 
 功能点：  
@@ -10,8 +10,7 @@
 npm install sqlconds
 # Usage 使用
 
-### 通用查询条件组织示例：
-#### 通用查询条件组织：
+## 通用查询条件组织：
 ```javascript
  // github仓库地址: https://github.com/aixinyongheng/sqlconds
  const Sqlconds = require('sqlconds');
@@ -42,7 +41,7 @@ npm install sqlconds
 
   console.log(`select count(*),${groupbyRes.fields},${statiscondRes.statiscond} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`);
 ```
-#### 数值对象转为insert/update语句
+## 数值对象转为insert/update语句
 ```javascript
  const Sqlconds = require('sqlconds');
  const sqlconds = new Sqlconds("postgres");

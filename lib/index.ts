@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-var-requires
+// const sqlstring = require("./utils/sqlstring");
 /**
  * todo 1.防止sql注入
  *      2.eslint配置
@@ -56,16 +58,16 @@ class Sqlconds {
         condsstr += ` ${item.whereLinker ? item.whereLinker : 'and'} `;
       }
       // 排序的后面提出来，目前兼容下之前的传参
-      if (item.operator === 'OBA' || item.operator === 'OBD' || item.operator === 'OB') {
+      if (item.operator.toUpperCase() === 'OBA' || item.operator.toUpperCase() === 'OBD' || item.operator.toUpperCase() === 'OB') {
         condsstr += ' 1 = 1 ';
         if (orderstr) { // 排序已有值，增加连接符 ,
           orderstr += ' , ';
         }
-        if (item.operator === 'OBD') { // 如果最后一个是排序，则闭环
+        if (item.operator.toUpperCase() === 'OBD') { // 如果最后一个是排序，则闭环
           orderstr += `  ${rntable}"${item.field}" desc  `;
-        } else if (item.operator === 'OB') { // 如果最后一个是排序，则闭环
+        } else if (item.operator.toUpperCase() === 'OB') { // 如果最后一个是排序，则闭环
           orderstr += `    field(${rntable}"${item.field}",${item.value})   `;
-        } else if (item.operator === 'OBA') { // 如果最后一个是排序，则闭环
+        } else if (item.operator.toUpperCase() === 'OBA') { // 如果最后一个是排序，则闭环
           orderstr += `   ${rntable}"${item.field}"  asc  `;
         }
       } else {
@@ -102,29 +104,29 @@ class Sqlconds {
     }
     // 内容值处理
     let itemvalue = '';
-    if (conditem.operator === 'FQ' || conditem.operator === 'NFQ') {
+    if (conditem.operator.toUpperCase() === 'FQ' || conditem.operator.toUpperCase() === 'NFQ') {
       itemvalue = conditem.value ? ` '%${conditem.value}%' ` : '%%';
-    } else if (conditem.operator === 'FQL') {
+    } else if (conditem.operator.toUpperCase() === 'FQL') {
       itemvalue = conditem.value ? ` '%${conditem.value}' ` : '%';
-    } else if (conditem.operator === 'FQR') {
+    } else if (conditem.operator.toUpperCase() === 'FQR') {
       itemvalue = conditem.value ? ` '${conditem.value}%' ` : '%';
-    } else if (conditem.operator === 'IN') {
+    } else if (conditem.operator.toUpperCase() === 'IN') {
       itemvalue = `('${conditem.value.split(',').join('\',\'')}')`;
-    } else if (conditem.operator === 'INN') {
+    } else if (conditem.operator.toUpperCase() === 'INN') {
       itemvalue = `('${conditem.value.split(',').join('\',\'')}')`;
-    } else if (conditem.operator === 'BTN') {
+    } else if (conditem.operator.toUpperCase() === 'BTN') {
       itemvalue = `'${conditem.value.split(',').join('\' and  \'')}'`;
-    } else if (conditem.operator === 'GEOMINTER' || conditem.operator === 'GEOMNOTINTER') {
+    } else if (conditem.operator.toUpperCase() === 'GEOMINTER' || conditem.operator.toUpperCase() === 'GEOMNOTINTER') {
       itemvalue = '';
     } else {
       itemvalue = (conditem.value || conditem.value == '0') ? `'${conditem.value}'` : '';
     }
     //  条件处理
-    if (conditem.operator === 'GEOMINTER' || conditem.operator === 'GEOMNOTINTER') {
+    if (conditem.operator.toUpperCase() === 'GEOMINTER' || conditem.operator.toUpperCase() === 'GEOMNOTINTER') {
       condstr += ` st_intersects(${conditemFieldReset}, st_setsrid(st_geomfromgeojson('${typeof conditem.value === 'object' ? JSON.stringify(conditem.value) : conditem.value}'),4490)) ${RelationSign[conditem.operator]}  ${conditem.operator === 'GEOMINTER' ? 'true' : 'false'} `;
     } else {
 
-      condstr += ` ${conditemFieldReset} ${RelationSign[conditem.operator]}  ${itemvalue} `;
+      condstr += ` ${conditemFieldReset} ${RelationSign[conditem.operator.toUpperCase()]}  ${itemvalue} `;
     }
     return condstr;
   }
