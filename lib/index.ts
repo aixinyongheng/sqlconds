@@ -7,12 +7,14 @@
  */
 class Sqlconds {
   private _flag;
+  private _mode;
   /**
    * 构造函数
    * @param flag 数据库类型  [postgres/mysql/oracle/...]
    */
-  constructor(flag: string) {
+  constructor(flag = 'postgres', { mode = 'default' } = { mode: 'default' }) {
     this._flag = flag;
+    this._mode = mode;
   }
   /**
    * 

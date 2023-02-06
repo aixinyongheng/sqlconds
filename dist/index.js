@@ -11,8 +11,11 @@ var Sqlconds = /** @class */ (function () {
      * 构造函数
      * @param flag 数据库类型  [postgres/mysql/oracle/...]
      */
-    function Sqlconds(flag) {
+    function Sqlconds(flag, _a) {
+        if (flag === void 0) { flag = 'postgres'; }
+        var _b = _a === void 0 ? { mode: 'default' } : _a, _c = _b.mode, mode = _c === void 0 ? 'default' : _c;
         this._flag = flag;
+        this._mode = mode;
     }
     /**
      *
