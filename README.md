@@ -13,7 +13,10 @@ npm install sqlconds
 ## 通用查询条件组织：
 ```javascript
  // github仓库地址: https://github.com/aixinyongheng/sqlconds
+ // cjs 引入方式
  const Sqlconds = require('sqlconds');
+ // es6 引入方式
+ import Sqlconds from "sqlconds";
  
  const sqlconds =new Sqlconds("postgres"); // postgres/mysql/oracle ...
  // 1.筛选条件组织
