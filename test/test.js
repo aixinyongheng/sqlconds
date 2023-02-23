@@ -3,7 +3,7 @@
 'use strict';
 const expect = require('chai').expect;
 const Sqlconds = require('../dist/index');
-// import sqlconds from "../dist/index"
+// import Sqlconds from "../dist/index"
 
 describe('class Sqlconds:', () => {
   it('condPackage:', () => {
