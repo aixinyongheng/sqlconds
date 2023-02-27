@@ -62,6 +62,10 @@ var BasesqlConds = /** @class */ (function () {
         condsstr += '  (';
         for (var index = 0; index < conds.length; index++) { // for  in  有问题
             var item = conds[index];
+            // 校验参数是否正确/防止sql注入处理
+            if (!this.RelationSign[item.operator.toUpperCase()]) {
+                throw new Error("\u53C2\u6570\u6821\u9A8C\u5931\u8D25\u3002".concat(this._flag, "\u4E0D\u5B58\u5728\u53C2\u6570 item.operator:  ").concat(item.operator));
+            }
             if (+index !== 0) { // 非首个条件，增加连接符 and/or
                 condsstr += " ".concat(item.whereLinker ? item.whereLinker : 'and', " ");
             }

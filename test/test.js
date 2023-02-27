@@ -25,7 +25,7 @@ describe('class Sqlconds:', () => {
   });
 
   it('statisCondPackage:', () => {
-    const sqlconds = new Sqlconds("postgres");
+    const sqlconds = new Sqlconds("mysql");
     const res = sqlconds.statisCondPackage([{ "field": "field1", "type": "ZDZ", "rename": "最大值", "dpoint": 0 }]);
     expect(res.statiscond).to.equal(` max("field1") AS "最大值" `);
 

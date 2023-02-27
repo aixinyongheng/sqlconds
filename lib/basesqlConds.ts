@@ -59,6 +59,10 @@ class BasesqlConds {
     condsstr += '  (';
     for (let index = 0; index < conds.length; index++) { // for  in  有问题
       const item = conds[index];
+      // 校验参数是否正确/防止sql注入处理
+      if (!this.RelationSign[item.operator.toUpperCase()]) {
+        throw new Error(`参数校验失败。${this._flag}不存在参数 item.operator:  ${item.operator}`)
+      }
       if (+index !== 0) { // 非首个条件，增加连接符 and/or
         condsstr += ` ${item.whereLinker ? item.whereLinker : 'and'} `;
       }

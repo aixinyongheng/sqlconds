@@ -1,6 +1,6 @@
 {
   "name": "sqlconds",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "description": "前后台约定通用sql查询条件",
   "main": "./dist/bundle.js",
   "scripts": {
