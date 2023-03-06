@@ -24,23 +24,24 @@ npm install sqlconds
 
  console.log(sqlres.cond); // and   (  "bm"   =   'zrzhczt_ggfwss_xx' )
  console.log(sqlres.order); // order by   "px" desc
-
  console.log(`select * from tableA where 1=1 ${sqlres.cond} ${sqlres.order}`);
 
- // 2. 分组条件组织
- // 2.1 分组group by 字段
- const groupbyRes=sqlconds.groupCondPackage('[{ "type":"CG", "field":"field1", "rename":"newfield1" },{ "type":"SUB", "field":"field2,1,4", "rename":"newfield2" }]');
+```
+## 分组条件组织（待完善）
+```javascript
+// 2. 分组条件组织
+// 2.1 分组group by 字段
+const groupbyRes=sqlconds.groupCondPackage('[{ "type":"CG", "field":"field1", "rename":"newfield1" },{ "type":"SUB", "field":"field2,1,4", "rename":"newfield2" }]');
 
-  console.log(groupbyRes.groupbycond); //  group by "field1",substring(field2,1,4) 
-  console.log(groupbyRes.fields); //  "field1" AS "newfield1",substring(field2,1,4) AS "newfield2" 
-
-  console.log(`select count(*),${groupbyRes.fields} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`);
-
-
+console.log(groupbyRes.groupbycond); //  group by "field1",substring(field2,1,4) 
+console.log(groupbyRes.fields); //  "field1" AS "newfield1",substring(field2,1,4) AS "newfield2" 
+console.log(`select count(*),${groupbyRes.fields} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`);
+```
+## 聚合统计条件组织（待完善）
+```javascript
  // 2.2 聚合统计函数组织
   const statiscondRes = sqlconds.statisCondPackage([{"field":"field1","type":"ZDZ","rename":"最大值","dpoint":0}]);
   console.log(statiscondRes.statiscond); //  max("field1") AS "最大值" 
-
 
   console.log(`select count(*),${groupbyRes.fields},${statiscondRes.statiscond} from tableA where 1=1 ${sqlres.cond} ${groupbyRes.groupbycond}`);
 ```
